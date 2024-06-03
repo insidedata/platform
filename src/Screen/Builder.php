@@ -10,8 +10,7 @@ use Orchid\Screen\Contracts\Fieldable;
 use Orchid\Screen\Contracts\Groupable;
 use Throwable;
 
-class Builder
-{
+class Builder {
     /**
      * Fields to be reflected, in the form Field.
      *
@@ -52,8 +51,8 @@ class Builder
      *
      * @param Fieldable[] $fields
      */
-    public function __construct(iterable $fields, ?Repository $data = null)
-    {
+    public function __construct(iterable $fields, ?Repository $data = null) {
+
         $this->fields = collect($fields)->all();
         $this->data = $data ?? new Repository();
     }
@@ -61,8 +60,7 @@ class Builder
     /**
      * @return $this
      */
-    public function setLanguage(?string $language = null): self
-    {
+    public function setLanguage(?string $language = null): self {
         $this->language = $language;
 
         return $this;
@@ -71,8 +69,7 @@ class Builder
     /**
      * @return $this
      */
-    public function setPrefix(?string $prefix = null): self
-    {
+    public function setPrefix(?string $prefix = null): self {
         $this->prefix = $prefix;
 
         return $this;
@@ -83,8 +80,8 @@ class Builder
      *
      * @throws Throwable
      */
-    public function generateForm(): string
-    {
+    public function generateForm(): string {
+
         collect($this->fields)->each(function (Fieldable $field) {
             $this->form .= is_subclass_of($field, Groupable::class)
                 ? $this->renderGroup($field)
@@ -99,12 +96,20 @@ class Builder
      *
      * @return array|string
      */
-    private function renderGroup(Groupable $group)
-    {
+    private function renderGroup(Groupable $group) {
+
         $prepare = collect($group->getGroup())
-            ->map(fn ($field) => $this->render($field))
+            ->map(function ($field) {
+
+                if (is_subclass_of($field, Groupable::class)) {
+                    return $this->renderGroup($field);
+                }
+
+                return  $this->render($field);
+            })
             ->filter()
             ->toArray();
+
 
         return $group->setGroup($prepare)->render();
     }
@@ -117,8 +122,7 @@ class Builder
      *
      * @return mixed
      */
-    private function render(Fieldable $field)
-    {
+    private function render(Fieldable $field) {
         $field->set('lang', $this->language);
         $field->set('prefix', $this->buildPrefix($field));
 
@@ -129,16 +133,14 @@ class Builder
         return $field->render();
     }
 
-    private function buildPrefix(Fieldable $field): ?string
-    {
+    private function buildPrefix(Fieldable $field): ?string {
         return $field->get('prefix', $this->prefix);
     }
 
-    private function fill(array $attributes): array
-    {
+    private function fill(array $attributes): array {
         $name = $attributes['name'];
 
-        if (! is_string($name) || empty($name)) {
+        if (!is_string($name) || empty($name)) {
             return $attributes;
         }
 
@@ -147,7 +149,7 @@ class Builder
 
         //set prefix
         if ($attributes['prefix'] !== null) {
-            $name = '.'.$name;
+            $name = '.' . $name;
         }
 
         $attributes['name'] = self::convertDotToArray($name);
@@ -162,14 +164,13 @@ class Builder
      *
      * @return mixed
      */
-    private function getValue(string $key, $value = null)
-    {
+    private function getValue(string $key, $value = null) {
         if ($this->language !== null) {
-            $key = $this->language.'.'.$key;
+            $key = $this->language . '.' . $key;
         }
 
         if ($this->prefix !== null) {
-            $key = $this->prefix.'.'.$key;
+            $key = $this->prefix . '.' . $key;
         }
 
         $data = $this->data->getContent($key);
@@ -186,13 +187,12 @@ class Builder
         return $data;
     }
 
-    public static function convertDotToArray(string $string): string
-    {
+    public static function convertDotToArray(string $string): string {
         $name = '';
         $binding = explode('.', $string);
 
         foreach ($binding as $key => $bind) {
-            $name .= $key === 0 ? $bind : '['.$bind.']';
+            $name .= $key === 0 ? $bind : '[' . $bind . ']';
         }
 
         return $name;

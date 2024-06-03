@@ -11,7 +11,10 @@
                         {{ __('Configure columns') }}
                     </button>
                     <div class="dropdown-menu dropdown-column-menu dropdown-scrollable">
+                        
+                        
                         @foreach($columns as $column)
+                        
                             {!! $column->buildItemMenu() !!}
                         @endforeach
                     </div>

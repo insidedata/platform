@@ -15,8 +15,7 @@ use Orchid\Screen\Fields\Input;
 use Orchid\Screen\Fields\NumberRange;
 use Orchid\Screen\Fields\Select;
 
-class TD extends Cell
-{
+class TD extends Cell {
     /**
      * Align the cell to the left.
      */
@@ -94,8 +93,7 @@ class TD extends Cell
     /**
      * @param string|int $width
      */
-    public function width($width): self
-    {
+    public function width($width): self {
         $this->width = $width;
 
         return $this;
@@ -104,8 +102,7 @@ class TD extends Cell
     /**
      * @param string $style
      */
-    public function style($style): self
-    {
+    public function style($style): self {
         $this->style = $style;
 
         return $this;
@@ -114,8 +111,7 @@ class TD extends Cell
     /**
      * @param string $class
      */
-    public function class($class): self
-    {
+    public function class($class): self {
         $this->class = $class;
 
         return $this;
@@ -124,15 +120,13 @@ class TD extends Cell
     /**
      * @param string|\Orchid\Screen\Field $filter
      */
-    public function filterOptions(iterable $filterOptions): self
-    {
+    public function filterOptions(iterable $filterOptions): self {
         $this->filterOptions = $filterOptions;
 
         return $this;
     }
 
-    public function filterValue(callable $callable): self
-    {
+    public function filterValue(callable $callable): self {
         $this->callbackFilterValue = $callable;
 
         return $this;
@@ -142,8 +136,7 @@ class TD extends Cell
      * @param string                 $filter
      * @param iterable|callable|null $options
      */
-    public function filter($filter = self::FILTER_TEXT, $options = null): self
-    {
+    public function filter($filter = self::FILTER_TEXT, $options = null): self {
         if (is_iterable($options)) {
             $this->filterOptions($options);
         }
@@ -157,8 +150,7 @@ class TD extends Cell
         return $this;
     }
 
-    public function sort(bool $sort = true): self
-    {
+    public function sort(bool $sort = true): self {
         $this->sort = $sort;
 
         return $this;
@@ -167,8 +159,7 @@ class TD extends Cell
     /**
      * @return $this
      */
-    public function align(string $align): self
-    {
+    public function align(string $align): self {
         $this->align = $align;
 
         return $this;
@@ -177,8 +168,7 @@ class TD extends Cell
     /**
      * @return $this
      */
-    public function alignLeft(): self
-    {
+    public function alignLeft(): self {
         $this->align = self::ALIGN_LEFT;
 
         return $this;
@@ -187,8 +177,7 @@ class TD extends Cell
     /**
      * @return $this
      */
-    public function alignRight(): self
-    {
+    public function alignRight(): self {
         $this->align = self::ALIGN_RIGHT;
 
         return $this;
@@ -197,8 +186,7 @@ class TD extends Cell
     /**
      * @return $this
      */
-    public function alignCenter(): self
-    {
+    public function alignCenter(): self {
         $this->align = self::ALIGN_CENTER;
 
         return $this;
@@ -207,8 +195,7 @@ class TD extends Cell
     /**
      * @return $this
      */
-    public function colspan(int $colspan): self
-    {
+    public function colspan(int $colspan): self {
         $this->colspan = $colspan;
 
         return $this;
@@ -219,10 +206,9 @@ class TD extends Cell
      *
      * @return Factory|View
      */
-    public function buildTh()
-    {
+    public function buildTh() {
         return view('platform::partials.layouts.th', [
-            'width'        => is_numeric($this->width) ? $this->width.'px' : $this->width,
+            'width'        => is_numeric($this->width) ? $this->width . 'px' : $this->width,
             'align'        => $this->align,
             'sort'         => $this->sort,
             'sortUrl'      => $this->buildSortUrl(),
@@ -238,8 +224,7 @@ class TD extends Cell
     /**
      * @return \Orchid\Screen\Field|null
      */
-    protected function buildFilter(): ?Field
-    {
+    protected function buildFilter(): ?Field {
         /** @var \Orchid\Screen\Field $filter|string */
         $filter = $this->filter;
 
@@ -261,8 +246,7 @@ class TD extends Cell
     /**
      * @return \Orchid\Screen\Field
      */
-    protected function detectConstantFilter(string $filter): Field
-    {
+    protected function detectConstantFilter(string $filter): Field {
         $input = match ($filter) {
             self::FILTER_DATE_RANGE   => DateRange::make()->disableMobile(),
             self::FILTER_NUMBER_RANGE => NumberRange::make(),
@@ -281,8 +265,7 @@ class TD extends Cell
      *
      * @return Factory|View
      */
-    public function buildTd($repository, ?object $loop = null)
-    {
+    public function buildTd($repository, ?object $loop = null) {
         $value = $this->render ? $this->handler($repository, $loop) : $repository->getContent($this->name);
 
         return view('platform::partials.layouts.td', [
@@ -290,15 +273,14 @@ class TD extends Cell
             'value'   => $value,
             'render'  => $this->render,
             'slug'    => $this->sluggable(),
-            'width'   => is_numeric($this->width) ? $this->width.'px' : $this->width,
+            'width'   => is_numeric($this->width) ? $this->width . 'px' : $this->width,
             'style'   => $this->style,
             'class'   => $this->class,
             'colspan' => $this->colspan,
         ]);
     }
 
-    public function isAllowUserHidden(): bool
-    {
+    public function isAllowUserHidden(): bool {
         return $this->allowUserHidden;
     }
 
@@ -307,9 +289,8 @@ class TD extends Cell
      *
      * @return Factory|View|null
      */
-    public function buildItemMenu()
-    {
-        if (! $this->isAllowUserHidden()) {
+    public function buildItemMenu() {
+        if (!$this->isAllowUserHidden() || empty($this->title)) {
             return;
         }
 
@@ -320,16 +301,14 @@ class TD extends Cell
         ]);
     }
 
-    protected function sluggable(): string
-    {
+    protected function sluggable(): string {
         return Str::slug($this->name);
     }
 
     /**
      * Prevents the user from hiding a column in the interface.
      */
-    public function cantHide(bool $hidden = false): self
-    {
+    public function cantHide(bool $hidden = false): self {
         $this->allowUserHidden = $hidden;
 
         return $this;
@@ -338,25 +317,22 @@ class TD extends Cell
     /**
      * @return $this
      */
-    public function defaultHidden(bool $hidden = true): self
-    {
+    public function defaultHidden(bool $hidden = true): self {
         $this->defaultHidden = $hidden;
 
         return $this;
     }
 
-    public function buildSortUrl(): string
-    {
+    public function buildSortUrl(): string {
         $query = request()->collect()->put('sort', revert_sort($this->column))->toArray();
 
-        return url()->current().'?'.http_build_query($query);
+        return url()->current() . '?' . http_build_query($query);
     }
 
     /**
      * @param TD[] $columns
      */
-    public static function isShowVisibleColumns($columns): bool
-    {
+    public static function isShowVisibleColumns($columns): bool {
         return collect($columns)->filter(fn ($column) => $column->isAllowUserHidden())->isNotEmpty();
     }
 
@@ -365,13 +341,11 @@ class TD extends Cell
      *
      * @param \Orchid\Screen\Field $field
      */
-    protected function isComplexFieldType(Field $field): bool
-    {
+    protected function isComplexFieldType(Field $field): bool {
         return $field instanceof ComplexFieldConcern;
     }
 
-    protected function buildFilterString(): ?string
-    {
+    protected function buildFilterString(): ?string {
         $filter = get_filter($this->column);
 
         if ($filter === null) {
@@ -384,7 +358,7 @@ class TD extends Cell
 
         if (is_array($filter)) {
             if (isset($filter['start']) || isset($filter['end'])) {
-                return ($filter['start'] ?? '').' - '.($filter['end'] ?? '');
+                return ($filter['start'] ?? '') . ' - ' . ($filter['end'] ?? '');
             }
 
             if ($this->filterOptions) {

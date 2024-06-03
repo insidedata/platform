@@ -8,7 +8,7 @@ use Orchid\Screen\Contracts\Fieldable;
 use Orchid\Screen\Contracts\Groupable;
 use Orchid\Screen\Field;
 
-class Group implements Fieldable, Groupable {
+class Fieldset implements Fieldable, Groupable {
     /**
      * Default attributes value.
      *
@@ -16,10 +16,12 @@ class Group implements Fieldable, Groupable {
      */
     protected $attributes = [
         'group'       => [],
-        'class'       => 'col-12 col-md form-group mb-md-0',
+        'class'       => 'mt-3',
         'align'       => 'align-items-baseline',
         'itemToEnd'   => false,
+        'title'       => null,
     ];
+
 
     /**
      * Required Attributes.
@@ -31,12 +33,13 @@ class Group implements Fieldable, Groupable {
     /**
      * @var string
      */
-    protected $view = 'platform::fields.group';
+    protected $view = 'platform::fields.fieldset';
 
     /**
      * @return static
      */
     public static function make(array $group = []) {
+
         return (new static())->setGroup($group);
     }
 
@@ -58,6 +61,7 @@ class Group implements Fieldable, Groupable {
      * @return \Illuminate\View\View
      */
     public function render() {
+
         return view($this->view, $this->attributes);
     }
 
@@ -145,6 +149,10 @@ class Group implements Fieldable, Groupable {
      */
     public function toEnd(): self {
         return $this->set('itemToEnd', true);
+    }
+
+    public function title($title) {
+        return $this->set('title', $title);
     }
 
     public function colWidth(string $width): self {

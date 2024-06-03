@@ -14,8 +14,7 @@ use Throwable;
 /**
  * Class Rows.
  */
-abstract class Rows extends Layout
-{
+abstract class Rows extends Layout {
     /**
      * @var string
      */
@@ -38,13 +37,13 @@ abstract class Rows extends Layout
      *
      * @return Factory|\Illuminate\View\View
      */
-    public function build(Repository $repository)
-    {
+    public function build(Repository $repository) {
         $this->query = $repository;
 
-        if (! $this->isSee()) {
+        if (!$this->isSee()) {
             return;
         }
+
 
         $form = new Builder($this->fields(), $repository);
 
@@ -54,8 +53,7 @@ abstract class Rows extends Layout
         ]);
     }
 
-    public function title(?string $title = null): self
-    {
+    public function title(?string $title = null): self {
         $this->title = $title;
 
         return $this;

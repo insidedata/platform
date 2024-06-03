@@ -16,9 +16,9 @@ use Orchid\Platform\Dashboard;
 use Orchid\Platform\Events\AddRoleEvent;
 use Orchid\Platform\Events\RemoveRoleEvent;
 use Orchid\Platform\Models\Role;
+use App\Models\App\Team;
 
-trait UserAccess
-{
+trait UserAccess {
     use StatusAccess;
 
     /**
@@ -29,21 +29,22 @@ trait UserAccess
     /**
      * @return Collection
      */
-    public function getRoles()
-    {
+    public function getRoles() {
         return $this->roles()->get();
     }
 
-    public function roles(): BelongsToMany
-    {
+    public function roles(): BelongsToMany {
         return $this->belongsToMany(Dashboard::model(Role::class), 'role_users', 'user_id', 'role_id');
+    }
+
+    public function teams(): BelongsToMany {
+        return $this->belongsToMany(Dashboard::model(Team::class), 'team_user', 'user_id', 'team_id');
     }
 
     /**
      * @param Role|int|string $role
      */
-    public function inRole($role): bool
-    {
+    public function inRole($role): bool {
         $role = Arr::first($this->roles, static function ($instance) use ($role) {
             if ($role instanceof RoleInterface) {
                 return $instance->getRoleId() === $role->getRoleId();
@@ -58,9 +59,8 @@ trait UserAccess
         return $role !== null;
     }
 
-    public function hasAccess(string $permit, bool $cache = true): bool
-    {
-        if (! $cache || $this->cachePermissions === null) {
+    public function hasAccess(string $permit, bool $cache = true): bool {
+        if (!$cache || $this->cachePermissions === null) {
             $this->cachePermissions = $this->roles()
                 ->pluck('permissions')
                 ->prepend($this->permissions)
@@ -76,8 +76,7 @@ trait UserAccess
      * Permissions can be checked based on wildcards
      * using the * character to match any of a set of permissions.
      */
-    protected function filterWildcardAccess(array $permissions, string $permit): bool
-    {
+    protected function filterWildcardAccess(array $permissions, string $permit): bool {
         return collect($permissions)
             ->filter(fn (bool $value, $permission) => Str::is($permit, $permission) && $value)
             ->isNotEmpty();
@@ -88,8 +87,7 @@ trait UserAccess
      *
      * @param string|iterable $permissions
      */
-    public function hasAnyAccess($permissions, bool $cache = true): bool
-    {
+    public function hasAnyAccess($permissions, bool $cache = true): bool {
         if (empty($permissions)) {
             return true;
         }
@@ -104,8 +102,7 @@ trait UserAccess
      * Query Scope for retreiving users by a certain permission
      * The * character usage is not implemented.
      */
-    public function scopeByAccess(Builder $builder, string $permitWithoutWildcard): Builder
-    {
+    public function scopeByAccess(Builder $builder, string $permitWithoutWildcard): Builder {
         if (empty($permitWithoutWildcard)) {
             return $builder->whereRaw('1=0');
         }
@@ -119,8 +116,7 @@ trait UserAccess
      *
      * @param string|iterable $permitsWithoutWildcard
      */
-    public function scopeByAnyAccess(Builder $builder, $permitsWithoutWildcard): Builder
-    {
+    public function scopeByAnyAccess(Builder $builder, $permitsWithoutWildcard): Builder {
         $permits = collect($permitsWithoutWildcard);
 
         if ($permits->isEmpty()) {
@@ -129,7 +125,7 @@ trait UserAccess
 
         $rule = function (Builder $builder, \Illuminate\Support\Collection $permits) {
             $permits->each(function ($permit) use ($builder) {
-                $builder->orWhere('permissions->'.$permit, true);
+                $builder->orWhere('permissions->' . $permit, true);
             });
         };
 
@@ -144,8 +140,7 @@ trait UserAccess
             });
     }
 
-    public function addRole(Model $role): Model
-    {
+    public function addRole(Model $role): Model {
         $result = $this->roles()->save($role);
 
         $this->eventAddRole($role);
@@ -156,8 +151,7 @@ trait UserAccess
     /**
      * Remove Role Slug.
      */
-    public function removeRoleBySlug(string $slug): int
-    {
+    public function removeRoleBySlug(string $slug): int {
         $role = $this->roles()->where('slug', $slug)->first();
 
         if ($role === null) {
@@ -172,23 +166,26 @@ trait UserAccess
     /**
      * @return int|null
      */
-    public function removeRole(RoleInterface $role): int
-    {
+    public function removeRole(RoleInterface $role): int {
         return $this->removeRoleBySlug($role->getRoleSlug());
     }
 
     /**
      * @return $this
      */
-    public function replaceRoles(?array $roles = [])
-    {
+    public function replaceRoles(?array $roles = []) {
         $this->roles()->detach();
 
         $this->eventRemoveRole($roles);
-
         $this->roles()->attach($roles);
-
         $this->eventAddRole($roles);
+
+        return $this;
+    }
+
+    public function replaceTeams(?array $teams = []) {
+        $this->teams()->detach();
+        $this->teams()->attach($teams);
 
         return $this;
     }
@@ -196,35 +193,31 @@ trait UserAccess
     /**
      * @param Model|RoleInterface|RoleInterface[] $roles
      */
-    public function eventAddRole($roles)
-    {
+    public function eventAddRole($roles) {
         event(new AddRoleEvent($this, $roles));
     }
 
     /**
      * @param Model|RoleInterface|RoleInterface[] $roles
      */
-    public function eventRemoveRole($roles)
-    {
+    public function eventRemoveRole($roles) {
         event(new RemoveRoleEvent($this, $roles));
     }
 
     /**
      * @throws Exception
      */
-    public function delete(): bool
-    {
+    public function delete(): bool {
         $isSoftDeleted = array_key_exists(SoftDeletes::class, class_uses($this));
 
-        if ($this->exists && ! $isSoftDeleted) {
+        if ($this->exists && !$isSoftDeleted) {
             $this->roles()->detach();
         }
 
         return parent::delete();
     }
 
-    public function clearCachePermission(): self
-    {
+    public function clearCachePermission(): self {
         $this->cachePermissions = null;
 
         return $this;
